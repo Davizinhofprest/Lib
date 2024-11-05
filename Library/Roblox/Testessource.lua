@@ -1,5 +1,11 @@
 local TestHub = {}
 TestHub.Name = "Test Hub"
+TestHub.Theme = {
+    BackgroundColor = Color3.fromRGB(30, 30, 30),
+    ButtonColor = Color3.fromRGB(70, 70, 70),
+    ToggleColor = Color3.fromRGB(70, 70, 70),
+    TextColor = Color3.fromRGB(255, 255, 255)
+}
 
 function TestHub:CreateGUI(customName)
     if customName then
@@ -12,7 +18,7 @@ function TestHub:CreateGUI(customName)
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 400, 0, 350)
     mainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    mainFrame.BackgroundColor3 = self.Theme.BackgroundColor
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     mainFrame.Visible = true
     mainFrame.Parent = screenGui
@@ -30,15 +36,15 @@ function TestHub:CreateGUI(customName)
     titleLabel.Text = self.Name
     titleLabel.Font = Enum.Font.SourceSansBold
     titleLabel.TextSize = 24
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    titleLabel.TextColor3 = self.Theme.TextColor
+    titleLabel.BackgroundColor3 = self.Theme.BackgroundColor
     titleLabel.Parent = mainFrame
 
     local toggleButton = Instance.new("TextButton")
     toggleButton.Size = UDim2.new(0, 100, 0, 50)
     toggleButton.Position = UDim2.new(0.5, -50, 0, 60)
     toggleButton.Text = "Toggle Hub"
-    toggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    toggleButton.BackgroundColor3 = self.Theme.ButtonColor
     toggleButton.Parent = mainFrame
     applyUICorner(toggleButton, 8)
 
@@ -54,12 +60,13 @@ function TestHub:CreateGUI(customName)
         local tabButton = Instance.new("TextButton")
         tabButton.Size = UDim2.new(0, 100, 0, 50)
         tabButton.Text = tabName
+        tabButton.BackgroundColor3 = self.Theme.ButtonColor
         tabButton.Parent = tabContainer
         applyUICorner(tabButton, 8)
 
         local tabFrame = Instance.new("Frame")
         tabFrame.Size = UDim2.new(1, 0, 1, 0)
-        tabFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        tabFrame.BackgroundColor3 = self.Theme.BackgroundColor
         tabFrame.Visible = false
         tabFrame.Parent = tabContainer
 
@@ -78,6 +85,7 @@ function TestHub:CreateGUI(customName)
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(0, 100, 0, 50)
         button.Text = buttonName
+        button.BackgroundColor3 = self.Theme.ButtonColor
         button.Parent = tab.Frame
         applyUICorner(button, 8)
 
@@ -89,14 +97,14 @@ function TestHub:CreateGUI(customName)
         local toggleButton = Instance.new("TextButton")
         toggleButton.Size = UDim2.new(0, 100, 0, 50)
         toggleButton.Text = toggleName
-        toggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        toggleButton.BackgroundColor3 = self.Theme.ToggleColor
         toggleButton.Parent = tab.Frame
         applyUICorner(toggleButton, 8)
 
         local toggled = false
         toggleButton.MouseButton1Click:Connect(function()
             toggled = not toggled
-            toggleButton.BackgroundColor3 = toggled and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(70, 70, 70)
+            toggleButton.BackgroundColor3 = toggled and Color3.fromRGB(100, 200, 100) or self.Theme.ToggleColor
             callback(toggled)
         end)
     end
@@ -115,7 +123,7 @@ function TestHub:CreateGUI(customName)
         executeButton.Size = UDim2.new(0, 100, 0, 50)
         executeButton.Position = UDim2.new(0.5, -50, 1, 10)
         executeButton.Text = "Executar"
-        executeButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        executeButton.BackgroundColor3 = self.Theme.ButtonColor
         executeButton.Parent = tab.Frame
         applyUICorner(executeButton, 8)
 
@@ -124,6 +132,57 @@ function TestHub:CreateGUI(customName)
             callback(script)
         end)
     end
+
+    function TestHub:ToggleTheme()
+        if self.Theme.BackgroundColor == Color3.fromRGB(30, 30, 30) then
+            self.Theme.BackgroundColor = Color3.fromRGB(255, 255, 255)
+            self.Theme.ButtonColor = Color3.fromRGB(200, 200, 200)
+            self.Theme.ToggleColor = Color3.fromRGB(150, 150, 150)
+            self.Theme.TextColor = Color3.fromRGB(0, 0, 0)
+        else
+            self.Theme.BackgroundColor = Color3.fromRGB(30, 30, 30)
+            self.Theme.ButtonColor = Color3.fromRGB(70, 70, 70)
+            self.Theme.ToggleColor = Color3.fromRGB(70, 70, 70)
+            self.Theme.TextColor = Color3.fromRGB(255, 255, 255)
+        end
+        mainFrame.BackgroundColor3 = self.Theme.BackgroundColor
+        titleLabel.TextColor3 = self.Theme.TextColor
+        toggleButton.BackgroundColor3 = self.Theme.ButtonColor
+        for _, tab in pairs(tabs) do
+            tab.Frame.BackgroundColor3 = self.Theme.BackgroundColor
+        end
+    end
+
+    local function makeDraggable(frame)
+        local dragToggle = nil
+        local dragSpeed = 0.1
+        local dragStart = nil
+        local startPos = nil
+
+        frame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragToggle = true
+                dragStart = input.Position - frame.Position
+                startPos = frame.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragToggle = false
+                    end
+                end)
+            end
+        end)
+
+        frame.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragToggle then
+                    local delta = input.Position - dragStart
+                    frame.Position = UDim2.new(0, startPos.X + delta.X, 0, startPos.Y + delta.Y)
+                end
+            end
+        end)
+    end
+
+    makeDraggable(mainFrame)
 
     return TestHub
 end
