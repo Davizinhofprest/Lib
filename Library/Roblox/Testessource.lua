@@ -1,20 +1,20 @@
 local TestHub = {}
-TestHub.Name = "Test Hub" -- Nome padrão da biblioteca
+TestHub.Name = "Test Hub"
 
 function TestHub:CreateGUI(customName)
     if customName then
-        self.Name = customName -- Configura o nome da biblioteca se fornecido
+        self.Name = customName
     end
 
     local screenGui = Instance.new("ScreenGui")
     screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    
+
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0, 400, 0, 350)
     mainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
     mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.Visible = false
+    mainFrame.Visible = true
     mainFrame.Parent = screenGui
 
     local function applyUICorner(instance, radius)
@@ -42,10 +42,6 @@ function TestHub:CreateGUI(customName)
     toggleButton.Parent = mainFrame
     applyUICorner(toggleButton, 8)
 
-    toggleButton.MouseButton1Click:Connect(function()
-        mainFrame.Visible = not mainFrame.Visible
-    end)
-
     local tabs = {}
     local tabContainer = Instance.new("Frame")
     tabContainer.Size = UDim2.new(1, 0, 1, -50)
@@ -67,61 +63,69 @@ function TestHub:CreateGUI(customName)
         tabFrame.Visible = false
         tabFrame.Parent = tabContainer
 
-        table.insert(tabs, {Button = tabButton, Frame = tabFrame})
-
-        tabButton.MouseButton1Click:Connect(function()
+        function tabButton.MouseButton1Click()
             for _, tab in pairs(tabs) do
                 tab.Frame.Visible = false
             end
             tabFrame.Visible = true
-        end)
+        end
+
+        tabs[tabName] = { Button = tabButton, Frame = tabFrame }
     end
 
     function TestHub:AddButton(tabIndex, buttonName, callback)
+        local tab = tabs[tabIndex]
         local button = Instance.new("TextButton")
-        button.Size = UDim2.new(0, 180, 0, 40)
+        button.Size = UDim2.new(0, 100, 0, 50)
         button.Text = buttonName
-        button.Parent = tabs[tabIndex].Frame
+        button.Parent = tab.Frame
         applyUICorner(button, 8)
 
         button.MouseButton1Click:Connect(callback)
     end
 
     function TestHub:AddToggle(tabIndex, toggleName, callback)
+        local tab = tabs[tabIndex]
         local toggleButton = Instance.new("TextButton")
-        toggleButton.Size = UDim2.new(0, 180, 0, 40)
+        toggleButton.Size = UDim2.new(0, 100, 0, 50)
         toggleButton.Text = toggleName
-        toggleButton.Parent = tabs[tabIndex].Frame
+        toggleButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        toggleButton.Parent = tab.Frame
         applyUICorner(toggleButton, 8)
-        
+
         local toggled = false
         toggleButton.MouseButton1Click:Connect(function()
             toggled = not toggled
+            toggleButton.BackgroundColor3 = toggled and Color3.fromRGB(100, 200, 100) or Color3.fromRGB(70, 70, 70)
             callback(toggled)
         end)
     end
 
-    function TestHub:AddTextBox(tabIndex, textBoxName, callback)
+    function TestHub:AddTextBox(tabIndex, placeholder, callback)
+        local tab = tabs[tabIndex]
         local textBox = Instance.new("TextBox")
-        textBox.Size = UDim2.new(0, 180, 0, 40)
-        textBox.PlaceholderText = textBoxName
-        textBox.Text = ""
-        textBox.Parent = tabs[tabIndex].Frame
+        textBox.Size = UDim2.new(1, -20, 0, 50)
+        textBox.Position = UDim2.new(0, 10, 0, 10)
+        textBox.PlaceholderText = placeholder
+        textBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        textBox.Parent = tab.Frame
         applyUICorner(textBox, 8)
 
         local executeButton = Instance.new("TextButton")
-        executeButton.Size = UDim2.new(0, 180, 0, 40)
-        executeButton.Text = "Execute"
-        executeButton.Position = UDim2.new(0, 0, 1, 5)
-        executeButton.Parent = tabs[tabIndex].Frame
+        executeButton.Size = UDim2.new(0, 100, 0, 50)
+        executeButton.Position = UDim2.new(0.5, -50, 1, 10)
+        executeButton.Text = "Executar"
+        executeButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        executeButton.Parent = tab.Frame
         applyUICorner(executeButton, 8)
 
         executeButton.MouseButton1Click:Connect(function()
-            callback(textBox.Text)
+            local script = textBox.Text
+            callback(script)
         end)
     end
 
-    return mainFrame
+    return TestHub
 end
 
 return TestHub
